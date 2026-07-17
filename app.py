@@ -621,9 +621,14 @@ def serve(path):
 
 
 # ============================================================
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     try:
         sync_admin_seed_user()
     except Exception as ex:
-        print(f'[WARN] Admin seed sync failed: {ex}')
-    app.run(debug=True, port=5000)
+        print(f"[WARN] Admin seed sync failed: {ex}")
+
+    port = int(os.environ.get("PORT", 5000))
+    debug = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
+
+    app.run(host="0.0.0.0", port=port, debug=debug)
