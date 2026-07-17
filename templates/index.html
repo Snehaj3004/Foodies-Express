@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Foodie Express 🍔</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body>
+
+<!-- ========== NAVBAR ========== -->
+<nav class="navbar" id="navbar">
+  <div class="nav-brand" onclick="navigate('home')">
+    <span class="brand-icon">🍔</span>
+    <span class="brand-name">Foodie<em>Express</em></span>
+  </div>
+  <div class="nav-links" id="navLinks">
+    <a href="#" onclick="navigate('home')"    class="nav-link" data-page="home">Menu</a>
+    <a href="#" onclick="navigate('orders')"  class="nav-link" data-page="orders">My Orders</a>
+    <a href="#" onclick="navigate('profile')" class="nav-link" data-page="profile" id="profileNavLink" style="display:none">Profile</a>
+    <a href="#" onclick="navigate('admin')"   class="nav-link admin-only" data-page="admin" style="display:none">⚙️ Admin</a>
+  </div>
+  <div class="nav-actions">
+    <button class="btn-cart" onclick="navigate('cart')" id="cartBtn">
+      🛒 <span id="cartBadge" class="cart-badge">0</span>
+    </button>
+    <div class="user-menu" id="userMenu" style="display:none">
+      <span id="userGreeting" onclick="navigate('profile')" style="cursor:pointer"></span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="navigate('login')">Login</button>
+  </div>
+  <button class="hamburger" id="hamburger" onclick="toggleMobileNav()">☰</button>
+</nav>
+<div class="mobile-nav" id="mobileNav">
+  <a href="#" onclick="navigate('home');closeMobileNav()">🏠 Menu</a>
+  <a href="#" onclick="navigate('cart');closeMobileNav()">🛒 Cart</a>
+  <a href="#" onclick="navigate('orders');closeMobileNav()">📋 Orders</a>
+  <a href="#" id="mobileProfile" onclick="navigate('profile');closeMobileNav()" style="display:none">👤 Profile</a>
+  <a href="#" id="mobileAdmin"   onclick="navigate('admin');closeMobileNav()"   style="display:none">⚙️ Admin</a>
+  <a href="#" id="mobileLogout"  onclick="logout();closeMobileNav()"             style="display:none">🚪 Logout</a>
+  <a href="#" id="mobileLogin"   onclick="navigate('login');closeMobileNav()">🔑 Login / Register</a>
+</div>
+
+<!-- ========== PAGES ========== -->
+<main id="app">
+
+  <!-- ===== HOME / MENU PAGE ===== -->
+  <section id="page-home" class="page active">
+    <div class="hero">
+      <div class="hero-text">
+        <p class="hero-tag">🚀 Free delivery on first order</p>
+        <h1>Great Food,<br/>Delivered <em>Hot.</em></h1>
+        <p class="hero-sub">Handcrafted meals from our kitchen to your door in 30 mins.</p>
+        <div class="hero-btns">
+          <button class="btn-primary" onclick="document.getElementById('menu-section').scrollIntoView({behavior:'smooth'})">
+            Explore Menu ↓
+          </button>
+          <button class="btn-outline-light" id="heroLoginBtn" onclick="navigate('login')">Login / Register</button>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><strong>500+</strong><span>Happy customers</span></div>
+          <div class="stat"><strong>30 min</strong><span>Avg delivery</span></div>
+          <div class="stat"><strong>13+</strong><span>Menu items</span></div>
+        </div>
+      </div>
+      <div class="hero-food-grid">
+        <span>🍕</span><span>🍔</span>
+        <span>🍝</span><span>🍹</span>
+      </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="menu-controls" id="menu-section">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" class="search-input"
+               placeholder="Search dishes, categories…" oninput="onSearch()"/>
+        <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none">✕</button>
+      </div>
+      <div class="category-tabs" id="categoryTabs">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- Sort bar -->
+    <div class="sort-bar">
+      <span class="results-count" id="resultsCount"></span>
+      <select id="sortSelect" class="sort-select" onchange="filterMenu()">
+        <option value="default">Sort: Default</option>
+        <option value="price-asc">Price: Low → High</option>
+        <option value="price-desc">Price: High → Low</option>
+        <option value="name-asc">Name: A → Z</option>
+      </select>
+    </div>
+
+    <!-- Menu Grid -->
+    <div class="menu-grid" id="menuGrid">
+      <div class="loading-spinner"><div class="spinner"></div><p>Loading delicious food…</p></div>
+    </div>
+  </section>
+
+  <!-- ===== LOGIN / REGISTER PAGE ===== -->
+  <section id="page-login" class="page">
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLogin"    onclick="switchAuthTab('login')">Login</button>
+          <button class="auth-tab"        id="tabRegister" onclick="switchAuthTab('register')">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="loginForm">
+          <h2>Welcome Back 👋</h2>
+          <p class="form-sub">Sign in to continue ordering</p>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="loginEmail" placeholder="you@example.com"
+                   onkeydown="if(event.key==='Enter')doLogin()"/>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="loginPassword" placeholder="Your password"
+                     onkeydown="if(event.key==='Enter')doLogin()"/>
+              <button class="pw-toggle" type="button" onclick="togglePw('loginPassword',this)">👁</button>
+            </div>
+          </div>
+          <div id="loginError" class="form-error"></div>
+          <button class="btn-primary full" id="loginSubmitBtn" onclick="doLogin()">Login →</button>
+          <p class="form-hint">Demo: <code>admin@foodie.com</code> / <code>admin123</code></p>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerForm" style="display:none">
+          <h2>Create Account 🚀</h2>
+          <p class="form-sub">Join thousands of happy foodies</p>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="regName" placeholder="John Doe"/>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="regEmail" placeholder="you@example.com"/>
+          </div>
+          <div class="form-group">
+            <label>Phone (optional)</label>
+            <input type="tel" id="regPhone" placeholder="+91 98765 43210"/>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="regPassword" placeholder="Min 6 characters"
+                     oninput="checkPwStrength(this.value)"/>
+              <button class="pw-toggle" type="button" onclick="togglePw('regPassword',this)">👁</button>
+            </div>
+            <div class="pw-strength" id="pwStrength"></div>
+          </div>
+          <div class="form-group">
+            <label>Confirm Password</label>
+            <input type="password" id="regConfirm" placeholder="Repeat password"
+                   onkeydown="if(event.key==='Enter')doRegister()"/>
+          </div>
+          <div id="regError" class="form-error"></div>
+          <button class="btn-primary full" id="regSubmitBtn" onclick="doRegister()">Create Account →</button>
+        </div>
+      </div>
+      <div class="auth-deco">
+        <div class="deco-card">🍔<br/><small>Burgers</small></div>
+        <div class="deco-card">🍕<br/><small>Pizzas</small></div>
+        <div class="deco-card">🍝<br/><small>Pasta</small></div>
+        <div class="deco-card">🍹<br/><small>Drinks</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CART PAGE ===== -->
+  <section id="page-cart" class="page">
+    <div class="page-header">
+      <h2>Your Cart 🛒</h2>
+      <button class="btn-outline danger-outline" onclick="clearCart()" id="clearCartBtn" style="display:none">🗑 Clear All</button>
+    </div>
+    <div class="cart-layout">
+      <div class="cart-items" id="cartItems">
+        <div class="loading-spinner"><div class="spinner"></div></div>
+      </div>
+      <div class="cart-summary" id="cartSummary" style="display:none">
+        <h3>Order Summary</h3>
+        <div id="cartSummaryItems"></div>
+        <div class="summary-divider"></div>
+        <div class="summary-row"><span>Subtotal</span><span id="summarySubtotal">₹0</span></div>
+        <div class="summary-row"><span>Delivery Fee</span><span>₹30</span></div>
+        <div class="summary-row promo-row" id="promoRow" style="display:none">
+          <span>Promo Discount</span><span class="text-green" id="promoDiscount">-₹0</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-row total"><span>Total</span><span id="summaryTotal">₹30</span></div>
+        <div class="promo-section">
+          <input type="text" id="promoInput" placeholder="Promo code (try SAVE10)" class="promo-input"/>
+          <button class="btn-promo" onclick="applyPromo()">Apply</button>
+        </div>
+        <div id="promoMsg" class="promo-msg"></div>
+        <button class="btn-primary full" onclick="navigate('checkout')">Proceed to Checkout →</button>
+        <button class="btn-outline full" style="margin-top:10px" onclick="navigate('home')">+ Add More Items</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CHECKOUT PAGE ===== -->
+  <section id="page-checkout" class="page">
+    <div class="page-header">
+      <button class="btn-back" onclick="navigate('cart')">← Back to Cart</button>
+      <h2>Checkout 📦</h2>
+    </div>
+    <div class="checkout-layout">
+      <div class="checkout-form">
+        <div class="steps">
+          <div class="step active"><span>1</span> Delivery</div>
+          <div class="step-line active"></div>
+          <div class="step active"><span>2</span> Payment</div>
+          <div class="step-line"></div>
+          <div class="step"><span>3</span> Confirm</div>
+        </div>
+
+        <h3>📍 Delivery Details</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="ckName" placeholder="Your name"/>
+          </div>
+          <div class="form-group">
+            <label>Phone *</label>
+            <input type="tel" id="ckPhone" placeholder="+91 ..."/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Delivery Address *</label>
+          <textarea id="ckAddress" rows="3" placeholder="House no., Street, Area, City, Pincode"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Delivery Instructions (optional)</label>
+          <input type="text" id="ckNotes" placeholder="e.g. Ring bell twice, leave at door…"/>
+        </div>
+
+        <h3>💳 Payment Method</h3>
+        <div class="payment-options">
+          <label class="radio-card active" onclick="selectPaymentCard(this)">
+            <input type="radio" name="payment" value="Cash on Delivery" checked/>
+            <span class="pm-icon">💵</span><span>Cash on Delivery</span>
+          </label>
+          <label class="radio-card" onclick="selectPaymentCard(this)">
+            <input type="radio" name="payment" value="UPI"/>
+            <span class="pm-icon">📱</span><span>UPI</span>
+          </label>
+          <label class="radio-card" onclick="selectPaymentCard(this)">
+            <input type="radio" name="payment" value="Card"/>
+            <span class="pm-icon">💳</span><span>Debit / Credit Card</span>
+          </label>
+        </div>
+
+        <div id="checkoutError" class="form-error"></div>
+        <button class="btn-primary full large" onclick="placeOrder()" id="placeOrderBtn">🎉 Place Order</button>
+      </div>
+
+      <div class="checkout-summary">
+        <h3>🧾 Your Order</h3>
+        <div id="ckItems"></div>
+        <div class="summary-divider"></div>
+        <div class="summary-row"><span>Subtotal</span><span id="ckSubtotal">₹0</span></div>
+        <div class="summary-row"><span>Delivery</span><span>₹30</span></div>
+        <div class="summary-row promo-row" id="ckPromoRow" style="display:none">
+          <span>Promo</span><span class="text-green" id="ckPromoDiscount">-₹0</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-row total"><span>Grand Total</span><span id="ckTotal">₹0</span></div>
+        <div class="delivery-note">⏱ Estimated: <strong>30–45 mins</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ORDERS PAGE ===== -->
+  <section id="page-orders" class="page">
+    <div class="page-header">
+      <h2>My Orders 📋</h2>
+      <select id="orderStatusFilter" onchange="filterOrders()" class="sort-select">
+        <option value="">All Orders</option>
+        <option value="pending">Pending</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="preparing">Preparing</option>
+        <option value="delivered">Delivered</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+    <div id="ordersList"><div class="loading-spinner"><div class="spinner"></div></div></div>
+  </section>
+
+  <!-- ===== ORDER SUCCESS PAGE ===== -->
+  <section id="page-success" class="page">
+    <div class="success-container">
+      <div class="success-icon">🎉</div>
+      <h2>Order Placed!</h2>
+      <p id="successMsg"></p>
+      <div class="success-track">
+        <div class="track-step done">✅<br/><small>Placed</small></div>
+        <div class="track-arrow">→</div>
+        <div class="track-step active">🔔<br/><small>Confirmed</small></div>
+        <div class="track-arrow">→</div>
+        <div class="track-step">👨‍🍳<br/><small>Preparing</small></div>
+        <div class="track-arrow">→</div>
+        <div class="track-step">🚴<br/><small>Delivered</small></div>
+      </div>
+      <p class="success-eta">Estimated delivery: <strong>30–45 minutes</strong></p>
+      <div class="success-actions">
+        <button class="btn-primary" onclick="navigate('orders')">Track Order</button>
+        <button class="btn-outline" onclick="navigate('home')">Order More 🍔</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PROFILE PAGE ===== -->
+  <section id="page-profile" class="page">
+    <div class="page-header"><h2>My Profile 👤</h2></div>
+    <div class="profile-layout">
+      <div class="profile-card">
+        <div class="profile-avatar" id="profileAvatar">👤</div>
+        <h3 id="profileName">—</h3>
+        <p id="profileEmail" class="text-muted"></p>
+        <span class="role-badge" id="profileRole"></span>
+        <div class="profile-stats">
+          <div class="pstat"><strong id="pstatOrders">0</strong><span>Orders</span></div>
+          <div class="pstat"><strong id="pstatSpent">₹0</strong><span>Total Spent</span></div>
+        </div>
+      </div>
+      <div class="profile-form-card">
+        <h3>Edit Profile</h3>
+        <div class="form-row">
+          <div class="form-group"><label>Full Name</label><input type="text" id="pfName"/></div>
+          <div class="form-group"><label>Phone</label><input type="tel" id="pfPhone"/></div>
+        </div>
+        <div class="form-group">
+          <label>Default Delivery Address</label>
+          <textarea id="pfAddress" rows="3" placeholder="Your address"></textarea>
+        </div>
+        <div id="profileMsg" class="form-success"></div>
+        <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+
+        <div class="divider-line"></div>
+        <h3>Change Password</h3>
+        <div class="form-group"><label>Current Password</label><input type="password" id="pfCurrentPw"/></div>
+        <div class="form-group"><label>New Password (min 6 chars)</label><input type="password" id="pfNewPw"/></div>
+        <div id="pwChangeMsg" class="form-error"></div>
+        <button class="btn-outline" onclick="changePassword()">Update Password</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ADMIN PAGE ===== -->
+  <section id="page-admin" class="page">
+    <div class="page-header">
+      <h2>Admin Panel ⚙️</h2>
+      <button class="btn-primary" onclick="openAddItemModal()">+ Add Item</button>
+    </div>
+    <div class="admin-stats" id="adminStats"></div>
+    <div class="admin-tabs">
+      <button class="tab active" onclick="adminTab('menu')"   id="adminTabMenu">🍔 Menu Items</button>
+      <button class="tab"        onclick="adminTab('orders')" id="adminTabOrders">📋 All Orders</button>
+    </div>
+    <div id="adminMenuPanel"></div>
+    <div id="adminOrdersPanel" style="display:none"></div>
+  </section>
+
+</main>
+
+<!-- ========== ITEM DETAIL MODAL ========== -->
+<div id="itemDetailModal" class="modal-overlay" style="display:none"
+     onclick="if(event.target===this)closeItemDetail()">
+  <div class="modal modal-wide">
+    <button class="modal-close" onclick="closeItemDetail()">✕</button>
+    <div class="item-detail-layout">
+      <img id="detailImg" class="detail-img" src="" alt=""
+           onerror="this.src='https://via.placeholder.com/400x300?text=Food'"/>
+      <div class="detail-info">
+        <span class="card-category" id="detailCategory"></span>
+        <h2 id="detailName"></h2>
+        <p id="detailDesc" class="detail-desc"></p>
+        <div class="detail-price" id="detailPrice"></div>
+        <div class="detail-qty-row">
+          <div class="qty-control">
+            <button class="qty-btn" onclick="detailQty(-1)">−</button>
+            <span class="qty-num" id="detailQtyNum">1</span>
+            <button class="qty-btn" onclick="detailQty(1)">+</button>
+          </div>
+          <span class="detail-subtotal" id="detailSubtotal"></span>
+        </div>
+        <button class="btn-primary full" onclick="addFromDetail()">Add to Cart 🛒</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ADD / EDIT MENU ITEM MODAL ========== -->
+<div id="itemModal" class="modal-overlay" style="display:none"
+     onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3 id="modalTitle">Add Menu Item</h3>
+    <input type="hidden" id="modalItemId"/>
+    <div class="form-row">
+      <div class="form-group"><label>Name *</label><input type="text" id="modalName"/></div>
+      <div class="form-group">
+        <label>Category *</label>
+        <select id="modalCategory">
+          <option>Burgers</option><option>Pizza</option>
+          <option>Pasta</option><option>Drinks</option><option>Desserts</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Description</label><input type="text" id="modalDesc"/></div>
+    <div class="form-row">
+      <div class="form-group"><label>Price (₹) *</label><input type="number" id="modalPrice" min="1"/></div>
+      <div class="form-group">
+        <label>Available</label>
+        <select id="modalAvailable"><option value="1">✅ Yes</option><option value="0">❌ No</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Image URL</label><input type="text" id="modalImage" placeholder="https://…"/></div>
+    <div id="modalError" class="form-error"></div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveMenuItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TOAST ========== -->
+<div id="toast" class="toast"></div>
+
+<!-- ========== BACK TO TOP ========== -->
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

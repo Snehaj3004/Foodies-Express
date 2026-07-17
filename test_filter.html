@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Category Filter</title>
+</head>
+<body>
+    <div id="categoryTabs"></div>
+    <div id="menuGrid"></div>
+    
+    <script>
+        // Global state
+        let menuData = [];
+        let activeCategory = '';
+        
+        // Simulated data
+        const mockData = {
+            success: true,
+            data: {
+                categories: ["Burgers", "Pizza", "Drinks"],
+                items: [
+                    { id: 1, name: "Classic Burger", category: "Burgers", price: 149 },
+                    { id: 2, name: "Chicken Burger", category: "Burgers", price: 139 },
+                    { id: 3, name: "Pepperoni Pizza", category: "Pizza", price: 229 },
+                    { id: 4, name: "Cola", category: "Drinks", price: 59 }
+                ]
+            }
+        };
+        
+        function renderCategories(cats) {
+            const container = document.getElementById('categoryTabs');
+            if (!container) {
+                console.error('[renderCategories] Container not found!');
+                return;
+            }
+
+            console.log('[renderCategories] Creating buttons for categories:', cats);
+            container.innerHTML = '';
+
+            // All button
+            const allBtn = document.createElement('button');
+            allBtn.type = 'button';
+            allBtn.className = 'tab active';
+            allBtn.dataset.cat = '';
+            allBtn.textContent = 'All';
+            allBtn.addEventListener('click', (e) => {
+                console.log('[All button clicked]');
+                e.preventDefault();
+                setCategory('');
+            });
+            container.appendChild(allBtn);
+
+            // Category buttons
+            (cats || []).forEach(cat => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'tab';
+                btn.dataset.cat = cat;
+                btn.textContent = cat;
+                btn.addEventListener('click', (e) => {
+                    console.log('[Category button clicked]', cat);
+                    e.preventDefault();
+                    setCategory(cat);
+                });
+                container.appendChild(btn);
+            });
+            console.log('[renderCategories] Buttons created, total:', container.children.length);
+        }
+        
+        function setCategory(cat) {
+            console.log('[setCategory] Called with cat:', cat);
+            activeCategory = cat;
+            // Update active tab styling
+            const allTabs = document.querySelectorAll('#categoryTabs .tab');
+            console.log('[setCategory] Found tabs:', allTabs.length);
+            allTabs.forEach(tab => {
+                const tabValue = tab.dataset.cat || '';
+                if (tabValue === cat) {
+                    tab.classList.add('active');
+                    console.log('[setCategory] Activated tab:', tabValue);
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            console.log('[setCategory] About to filter menu');
+            filterMenu();
+        }
+        
+        function filterMenu() {
+            console.log('[filterMenu] menuData length:', menuData.length, 'activeCategory:', activeCategory);
+            
+            if (!menuData || menuData.length === 0) {
+                document.getElementById('menuGrid').innerHTML = '<div>No menu items available.</div>';
+                return;
+            }
+
+            const filtered = menuData.filter(item => {
+                const matchCat = activeCategory === '' || String(item.category).trim() === String(activeCategory).trim();
+                return matchCat;
+            });
+
+            console.log('[filterMenu] filtered items:', filtered.length);
+            renderMenuGrid(filtered);
+        }
+        
+        function renderMenuGrid(items) {
+            const grid = document.getElementById('menuGrid');
+            if (!items.length) {
+                grid.innerHTML = '<div>No items found. Try a different category.</div>';
+                return;
+            }
+            grid.innerHTML = items.map(item => `<div>${item.name} - ₹${item.price} (${item.category})</div>`).join('');
+        }
+        
+        async function loadMenu() {
+            console.log('[loadMenu] Starting...');
+            const data = mockData;
+            console.log('[loadMenu] API Response:', data);
+            
+            if (!data.success) { 
+                console.error('[loadMenu] API failed');
+                return; 
+            }
+
+            menuData = data.data.items || [];
+            console.log('[loadMenu] menuData loaded, count:', menuData.length);
+            
+            activeCategory = '';
+            console.log('[loadMenu] Calling renderCategories');
+            renderCategories(data.data.categories || []);
+            
+            console.log('[loadMenu] Calling renderMenuGrid');
+            renderMenuGrid(menuData);
+        }
+        
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('[INIT] Page loaded');
+            loadMenu();
+        });
+    </script>
+</body>
+</html>
